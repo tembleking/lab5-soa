@@ -43,6 +43,13 @@ class Router(meterRegistry: MeterRegistry) : RouteBuilder() {
 
     override fun configure() {
         from(DIRECT_ROUTE)
+            .process { it ->
+                val inExchange = it.getIn()
+                inExchange.setHeader(
+                    "keywords",
+                    inExchange.getHeader("keywords").toString().replace("max:", "?count=")
+                );
+            }
             .toD("twitter-search:\${header.keywords}")
             .wireTap(LOG_ROUTE)
             .wireTap(COUNT_ROUTE)
@@ -61,8 +68,8 @@ class Router(meterRegistry: MeterRegistry) : RouteBuilder() {
                     }
                 }
             }
-        }
     }
+}
 
 class TaggedCounter(private val name: String, private val tagName: String, private val registry: MeterRegistry) {
     private val counters: MutableMap<String, Counter> = HashMap()
